@@ -1,3 +1,4 @@
+from traceback import print_tb
 from azure.identity import ClientSecretCredential 
 from azure.mgmt.resource import ResourceManagementClient
 from azure.mgmt.purview import PurviewManagementClient
@@ -5,28 +6,30 @@ from azure.mgmt.purview.models import *
 from datetime import datetime, timedelta
 import time
 
-def create-purview():
+def createpurview():
 
     Prerequisites = """
-	To create purview account please ensure you meet the following Prerequisites:
-	Azure subscription.
-	Service Principal
-	The user account(Service Principal) that you use to sign in to Azure must be a member of the contributor or owner role, or an administrator of the Azure subscription.
-	You must register the 'Microsoft.Purview' resource provider within your Azure subscription.
+    To create purview account please ensure you meet the following Prerequisites:
+    Azure subscription.
+    Service Principal
+    The user account(Service Principal) that you use to sign in to Azure must be a member of the contributor or owner role, or an administrator of the Azure subscription.
+    You must register the 'Microsoft.Purview' resource provider within your Azure subscription.
 
-	If you've met the prerequisites, please ensure you have the following details to procced further
-	Tenant ID
-	Subscription ID
-	Service principal client ID
-	Service principal Secret Value
-	Resource Group Name (if it's not an existing resource group, this program will create this resource group)
-	Region (for your resource group and your Microsoft Purview account.)
+    If you've met the prerequisites, please ensure you have the following details to procced further
+    Tenant ID
+    Subscription ID
+    Service principal client ID
+    Service principal Secret Value
+    Resource Group Name (if it's not an existing resource group, this program will create this resource group)
+    Region (for your resource group and your Microsoft Purview account.)
+    """
 
-	Tid= input("Enter Tenant ID:")
-	subscription_id = input("Enter Azure Subscription ID:")
-	SPid = input("Enter Service Principals Application (client) ID:")
-	SPsv = input("Enter Service Principals Secret value:")
-    rg_name = input("Enter resource group name")
+    print(Prerequisites)
+    Tid= input("Enter Tenant ID:")
+    subscription_id = input("Enter Azure Subscription ID:")
+    SPid = input("Enter Service Principals Application (client) ID:")
+    SPsv = input("Enter Service Principals Secret value:")
+    rg_name = input("Enter resource group name:")
     purview_name = input("Enter purview account name (It must be globally unique):")
     location = input("enter region") 
 
@@ -34,11 +37,11 @@ def create-purview():
     credentials = ClientSecretCredential(client_id=SPid, client_secret=SPsv, tenant_id=Tid) 
     resource_client = ResourceManagementClient(credentials, subscription_id)
     purview_client = PurviewManagementClient(credentials, subscription_id)
-	
+
     # create the resource group if the resource group does not exits
-	rg_list = resource_client.resource_groups.list()
-	if rg_name not in rg_list:
-		resource_client.resource_groups.create_or_update(rg_name, {"location": location})
+    rg_list = resource_client.resource_groups.list()
+    if rg_name not in rg_list:
+        resource_client.resource_groups.create_or_update(rg_name, {"location": location})
 
     #Create a purview
     identity = Identity(type= "SystemAssigned")
@@ -50,7 +53,7 @@ def create-purview():
         print("location:", pa.location, " Microsoft Purview Account Name: ", purview_name, " Id: " , pa.id ," tags: " , pa.tags) 
     except:
         print("Error in submitting job to create account")
-        print_item(pa)
+        print_tb(pa)
  
     while (getattr(pa,'provisioning_state')) != "Succeeded" :
         pa = (purview_client.accounts.get(rg_name, purview_name))  
@@ -61,4 +64,5 @@ def create-purview():
         time.sleep(30)    
 
 # Start the main method
-create-purview()
+createpurview()
+
