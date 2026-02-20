@@ -46,4 +46,4 @@ This project shows how to:
 ```bash
 git clone https://github.com/UmaMahesh-Devarajula/purview-data-governance-automation.git
 cd purview-data-governance-automation
-pip install -r requirements.txt
+py -m pip install -r requirements.txt
