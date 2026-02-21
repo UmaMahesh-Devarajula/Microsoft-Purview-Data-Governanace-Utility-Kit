@@ -1,12 +1,28 @@
-# 📖 Step‑by‑Step Guide: Creating a Microsoft Purview Account
+🚀 Creating a Microsoft Purview Account with Python SDK
 
-This section walks through how to run the Python script and verify the Purview account creation. 
+This project demonstrates how to programmatically create a Microsoft Purview account using the Azure Python SDK.
+
+📋 Prerequisites
+Before running the script, ensure you have:
+- An Azure subscription
+- A Service Principal with Contributor/Owner role on the subscription
+- The Microsoft.Purview resource provider registered on the subscription
+
+The following details  are required during the Creation of purview account:
+- Tenant ID
+- Subscription ID
+- Service Principal Client ID
+- Service Principal Secret Value
+- Resource Group Name (existing or new)
+- Region (for both Resource Group and Purview account)
+
 ## 1️⃣ Run the Script
+![alt text](image-1.png)
 Open your terminal or IDE and execute:
+
 ```bash
 python create_purview.py
 ```
-![alt text](Images/create-purview.PNG)
 
 You’ll be prompted to enter:
 
