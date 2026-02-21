@@ -42,7 +42,7 @@ for collection in collection_list:
 body_input = {
 	"kind": "AdlsGen2",
 	"properties": {
-		"endpoint": f"https://{storage_name}dfs.core.windows.net/",
+		"endpoint": f"https://{storage_name}.dfs.core.windows.net/",
 		"resourceGroup": rg_name,
 		"location": rg_location,
 		"resourceName": storage_name,
