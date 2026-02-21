@@ -3,7 +3,7 @@
 This section walks through how to run the Python script and verify the Purview account creation. 
 ## 1️⃣ Run the Script
 Open your terminal or IDE and execute:
-
+![(create-purview.PNG)](Images/create-purview.PNG)
 ```bash
 python create_purview.py
 ```
