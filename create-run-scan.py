@@ -40,7 +40,7 @@ def trigger_adls_scan():
     scan_payload = {
         "kind": "AdlsGen2Msi",
         "properties": {
-            "scanRulesetName": "AdlsGen",
+            "scanRulesetName": "AdlsGen2",
             "scanRulesetType": "System",
             "collection": {
                 "type": "CollectionReference",
