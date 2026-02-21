@@ -40,7 +40,7 @@ for collection in collection_list:
 
 
 body_input = {
-	"kind": "AzureStorage",
+	"kind": "AdlsGen2",
 	"properties": {
 		"endpoint": f"https://{storage_name}.blob.core.windows.net/",
 		"resourceGroup": rg_name,
