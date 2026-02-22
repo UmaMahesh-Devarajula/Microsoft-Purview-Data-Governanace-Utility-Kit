@@ -53,7 +53,7 @@ def get_credentials():
 
 def get_admin_client():
 	credentials = get_credentials()
-	client = PurviewAccountClient(endpoint=purview_endpoint, credential=credentials, logging_enable=True)
+	client = PurviewAccountClient(endpoint=f"https://{creds['purview_account_name']}.purview.azure.com", credential=credentials, logging_enable=True)
 	return client
 
 def build_payload(source_type, props):
@@ -195,7 +195,7 @@ def get_credentials():
 
 def get_admin_client():
 	credentials = get_credentials()
-	client = PurviewAccountClient(endpoint=purview_endpoint, credential=credentials, logging_enable=True)
+	client = PurviewAccountClient(endpoint=f"https://{creds['purview_account_name']}.purview.azure.com", credential=credentials, logging_enable=True)
 	return client
 
 def recreate_datasource():
