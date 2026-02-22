@@ -435,7 +435,7 @@ def interactive_build_scan_body(endpoint: str, token: str, datasource_type: str)
         db = input("Enter database name: ").strip()
         if db:
             props["databaseName"] = db
-        server = input("Enter SQL server endpoint (e.g., myserver.database.windows.net): ").strip()
+        server = input("Enter Azure SQL server endpoint (e.g., myserver.database.windows.net): ").strip()
         if server:
             props["serverEndpoint"] = server
 
