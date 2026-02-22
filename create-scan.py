@@ -410,7 +410,6 @@ def interactive_create_key_vault_connection(endpoint: str, token: str) -> Dict[s
 def interactive_build_scan_body(endpoint: str, token: str, datasource_type: str) -> Dict[str, Any]:
     print(f"Building scan body for datasource type: {datasource_type}")
     use_cred = input("Use existing Purview credential? (y/n): ").strip().lower()
-    credential_ref = None
     if use_cred == "y":
         credential_ref = input("Enter credential name: ").strip()
     else:
@@ -432,21 +431,25 @@ def interactive_build_scan_body(endpoint: str, token: str, datasource_type: str)
         }
     }
 
+    if datasource_type.lower() == "azuresqldatabase":
+        db = input("Enter database name: ").strip()
+        if db:
+            props["databaseName"] = db
+        server = input("Enter SQL server endpoint (e.g., myserver.database.windows.net): ").strip()
+        if server:
+            props["serverEndpoint"] = server
+
     if "adls" in datasource_type.lower() or "storage" in datasource_type.lower():
-        root_path = input("Enter root path to scan (container/folder) or leave blank: ").strip()
+        root_path = input("Enter root path to scan (container/folder): ").strip()
         if root_path:
             props["scanRuleset"]["scanPaths"] = [root_path]
-
-    if "sql" in datasource_type.lower():
-        db = input("Enter database name or leave blank: ").strip()
-        if db:
-            props["scanRuleset"]["database"] = db
 
     scan_body = {
         "kind": f"{datasource_type}Credential",
         "properties": props
     }
     return scan_body
+
 
 
 
