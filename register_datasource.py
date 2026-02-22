@@ -19,7 +19,7 @@ creds = authenticate()
 SOURCE_TYPES = {
     "Azure": {
         "kind": "AzureSubscription",
-        "properties": ["subscription_id", "resource_id"]
+        "properties": ["subscription_id"]
     },
     "AdlsGen2": {
         "kind": "AdlsGen2",
