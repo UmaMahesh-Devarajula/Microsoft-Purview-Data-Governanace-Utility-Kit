@@ -1,15 +1,17 @@
 import os
 import csv
 import datetime
+import json
 from azure.identity import ClientSecretCredential
 from azure.purview.scanning import PurviewScanningClient
 from azure.purview.administration.account import PurviewAccountClient
 from authenticate import authenticate
 
 BACKUP_DIR = "backup-datasources"
-CSV_FILE = "datasources.csv" 
-creds = authenticate() 
-# Supported source types and required properties (per Microsoft docs)
+CSV_FILE = "datasources.csv"
+
+creds = authenticate()
+
 SOURCE_TYPES = {
     "AdlsGen2": {
         "kind": "AdlsGen2",
@@ -48,97 +50,99 @@ SOURCE_TYPES = {
 COMMON_PROPERTIES = ["ds_name", "collection_name"]
 
 def get_credentials():
-	credentials = ClientSecretCredential(client_id=creds["client_id"], client_secret=creds["client_secret"], tenant_id=creds["tenant_id"])
-	return credentials
+    return ClientSecretCredential(
+        client_id=creds["client_id"],
+        client_secret=creds["client_secret"],
+        tenant_id=creds["tenant_id"]
+    )
 
 def get_purview_client():
-	credentials = get_credentials()
-	client = PurviewScanningClient(endpoint=f"https://{creds['purview_account_name']}.scan.purview.azure.com", credential=credentials, logging_enable=True)  
-	return client
+    credentials = get_credentials()
+    return PurviewScanningClient(
+        endpoint=f"https://{creds['purview_account_name']}.scan.purview.azure.com",
+        credential=credentials,
+        logging_enable=True
+    )
 
 def get_admin_client():
-	credentials = get_credentials()
-	client = PurviewAccountClient(endpoint=f"https://{creds['purview_account_name']}.purview.azure.com", credential=credentials, logging_enable=True)
-	return client
+    credentials = get_credentials()
+    return PurviewAccountClient(
+        endpoint=f"https://{creds['purview_account_name']}.purview.azure.com",
+        credential=credentials,
+        logging_enable=True
+    )
 
-try:
-	admin_client = get_admin_client()
-except ValueError as e:
-        print(e)
-
-collection_list = admin_client.collections.list_collections()
-for collection in collection_list:
-	if collection["friendlyName"].lower() == COMMON_PROPERTIES[1].lower():
-		collection_name = collection["name"]
+def resolve_collection_name(user_collection_name):
+    admin_client = get_admin_client()
+    collection_list = admin_client.collections.list_collections()
+    for collection in collection_list:
+        if collection["friendlyName"].lower() == user_collection_name.lower():
+            return collection["name"]
+    return user_collection_name  # fallback if not found
 
 def build_payload(source_type, props):
     kind = SOURCE_TYPES[source_type]["kind"]
     properties = {}
 
     if source_type == "AdlsGen2":
-        properties = {
+        properties.update({
             "endpoint": props["endpoint"],
             "location": props["location"],
             "resourceGroup": props["resource_group"],
             "resourceId": props["resource_id"],
             "resourceName": props["resource_name"],
             "subscriptionId": props["subscription_id"]
-        }
+        })
 
     elif source_type == "AzureStorage":
-        properties = {
+        properties.update({
             "endpoint": props["endpoint"],
             "location": props["location"],
             "resourceGroup": props["resource_group"],
             "resourceId": props["resource_id"],
             "resourceName": props["resource_name"],
             "subscriptionId": props["subscription_id"]
-        }
+        })
 
     elif source_type == "AzureSqlDatabase":
-        properties = {
+        properties.update({
             "serverEndpoint": props["server_endpoint"],
             "resourceId": props["resource_id"],
             "subscriptionId": props["subscription_id"],
             "resourceGroup": props["resource_group"],
             "resourceName": props["resource_name"],
             "location": props["location"]
-        }
+        })
 
     elif source_type == "AzureCosmosDb":
-        properties = {
+        properties.update({
             "accountUri": props["account_uri"],
             "location": props["location"],
             "resourceGroup": props["resource_group"],
             "resourceId": props["resource_id"],
             "resourceName": props["resource_name"],
             "subscriptionId": props["subscription_id"]
-        }
+        })
 
     elif source_type == "SqlServer":
-        properties = {
-            "serverEndpoint": props["server_endpoint"]
-        }
+        properties.update({"serverEndpoint": props["server_endpoint"]})
 
     elif source_type == "Oracle":
-        properties = {
+        properties.update({
             "host": props["host"],
             "port": props["port"],
             "serviceName": props["service_name"]
-        }
+        })
 
     elif source_type == "Teradata":
-        properties = {
-            "host": props["host"]
-        }
+        properties.update({"host": props["host"]})
 
     elif source_type == "SapS4Hana":
-        properties = {
+        properties.update({
             "applicationServer": props["application_server"],
             "systemNumber": props["system_number"]
-        }
+        })
 
-    # Add common collection reference
     properties["collection"] = {
         "type": "CollectionReference",
         "referenceName": props["collection_name"]
@@ -151,7 +155,6 @@ def build_payload(source_type, props):
     }
 
 def register_datasource():
-    
     print("Supported source types:", ", ".join(SOURCE_TYPES.keys()))
     source_type = input("Enter data source type: ")
     if source_type not in SOURCE_TYPES:
@@ -159,16 +162,18 @@ def register_datasource():
         return
 
     props = {}
-    # Collect common properties
     for prop in COMMON_PROPERTIES:
         props[prop] = input(f"Enter {prop}: ")
-    # Collect type-specific properties
     for prop in SOURCE_TYPES[source_type]["properties"]:
         props[prop] = input(f"Enter {prop}: ")
 
+    props["collection_name"] = resolve_collection_name(props["collection_name"])
+
     payload = build_payload(source_type, props)
 
-    credentials = get_credentials()
+    print("Payload being sent:")
+    print(json.dumps(payload, indent=2))
+
     client = get_purview_client()
 
     try:
@@ -180,7 +185,7 @@ def register_datasource():
 
     row = [source_type] + [props[p] for p in COMMON_PROPERTIES + SOURCE_TYPES[source_type]["properties"]] + [datetime.datetime.now()]
     write_to_csv(row, source_type)
-    generate_backup_script(source_type, props, config)
+    generate_backup_script(source_type, props)
 
 def write_to_csv(row, source_type):
     header = ["source_type"] + COMMON_PROPERTIES + SOURCE_TYPES[source_type]["properties"] + ["timestamp"]
@@ -191,51 +196,41 @@ def write_to_csv(row, source_type):
             writer.writerow(header)
         writer.writerow(row)
 
-def generate_backup_script(source_type, props, config):
+def generate_backup_script(source_type, props):
     os.makedirs(BACKUP_DIR, exist_ok=True)
     filename = os.path.join(BACKUP_DIR, f"backup-{props['ds_name']}-registration.py")
     payload = build_payload(source_type, props)
 
-    script = f'''from azure.identity import ClientSecretCredential
+    script = f'''import json
+from azure.identity import ClientSecretCredential
 from azure.purview.scanning import PurviewScanningClient
 from azure.purview.administration.account import PurviewAccountClient
 from authenticate import authenticate
 
-creds = authenticate() 
+creds = authenticate()
+
 def get_credentials():
-	credentials = ClientSecretCredential(client_id=creds["client_id"], client_secret=creds["client_secret"], tenant_id=creds["tenant_id"])
-	return credentials
+    return ClientSecretCredential(
+        client_id=creds["client_id"],
+        client_secret=creds["client_secret"],
+        tenant_id=creds["tenant_id"]
+    )
 
 def get_purview_client():
-	credentials = get_credentials()
-	client = PurviewScanningClient(endpoint=f"https://{creds['purview_account_name']}.scan.purview.azure.com", credential=credentials, logging_enable=True)  
-	return client
-
-def get_admin_client():
-	credentials = get_credentials()
-	client = PurviewAccountClient(endpoint=f"https://{creds['purview_account_name']}.purview.azure.com", credential=credentials, logging_enable=True)
-	return client
-
-try:
-	admin_client = get_admin_client()
-except ValueError as e:
-        print(e)
-
-collection_list = admin_client.collections.list_collections()
-for collection in collection_list:
-	if collection["friendlyName"].lower() == COMMON_PROPERTIES[1].lower():
-		collection_name = collection["name"]
-def recreate_datasource():
     credentials = get_credentials()
+    return PurviewScanningClient(
+        endpoint=f"https://{{creds['purview_account_name']}}.scan.purview.azure.com",
+        credential=credentials,
+        logging_enable=True
+    )
+
+def recreate_datasource():
     client = get_purview_client()
-
-    data_source = {payload}
-
+    data_source = {json.dumps(payload, indent=2)}
     response = client.data_sources.create_or_update(data_source_name="{props['ds_name']}", body=data_source)
     print("✅ Data source recreated:", response)
 
 if __name__ == "__main__":
-    #creds = authenticate() 
     recreate_datasource()
 '''
     with open(filename, "w") as f:
@@ -243,5 +238,4 @@ if __name__ == "__main__":
     print(f"📂 Backup script created: {filename}")
 
 if __name__ == "__main__":
-    #creds = authenticate() 
     register_datasource()
