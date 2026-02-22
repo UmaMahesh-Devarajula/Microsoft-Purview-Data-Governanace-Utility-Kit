@@ -53,11 +53,13 @@ def get_credentials():
 
 def get_purview_client():
 	credentials = get_credentials()
+    purview_scan_endpoint = f"https://{creds['purview_account_name']}.scan.purview.azure.com"
 	client = PurviewScanningClient(endpoint=purview_scan_endpoint, credential=credentials, logging_enable=True)  
 	return client
 
 def get_admin_client():
 	credentials = get_credentials()
+    purview_endpoint = f"https://{creds['purview_account_name']}.purview.azure.com"
 	client = PurviewAccountClient(endpoint=purview_endpoint, credential=credentials, logging_enable=True)
 	return client
 
@@ -151,9 +153,6 @@ def build_payload(source_type, props):
     }
 
 def register_datasource():
-    purview_endpoint = f"https://{creds['purview_account_name']}.purview.azure.com"
-    purview_scan_endpoint = f"https://{creds['purview_account_name']}.scan.purview.azure.com"
-    purview_account = creds["purview_account_name"]
     
     print("Supported source types:", ", ".join(SOURCE_TYPES.keys()))
     source_type = input("Enter data source type: ")
@@ -210,11 +209,13 @@ def get_credentials():
 
 def get_purview_client():
 	credentials = get_credentials()
+    purview_scan_endpoint = f"https://{creds['purview_account_name']}.scan.purview.azure.com"
 	client = PurviewScanningClient(endpoint=purview_scan_endpoint, credential=credentials, logging_enable=True)  
 	return client
 
 def get_admin_client():
 	credentials = get_credentials()
+    purview_endpoint = f"https://{{creds['purview_account_name']}}.purview.azure.com"
 	client = PurviewAccountClient(endpoint=purview_endpoint, credential=credentials, logging_enable=True)
 	return client
 
@@ -228,7 +229,6 @@ for collection in collection_list:
 	if collection["friendlyName"].lower() == collection_name.lower():
 
 def recreate_datasource():
-    purview_endpoint = f"https://{{creds['purview_account_name']}}.purview.azure.com"
     credentials = get_credentials()
     client = get_purview_client()
 
