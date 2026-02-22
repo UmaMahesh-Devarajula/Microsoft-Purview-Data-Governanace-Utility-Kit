@@ -3,7 +3,7 @@ import os
 import csv
 import datetime
 import json
-from typing import Dict
+from typing import Dict, List
 from azure.identity import ClientSecretCredential
 from azure.purview.scanning import PurviewScanningClient
 from azure.purview.administration.account import PurviewAccountClient
@@ -11,7 +11,8 @@ from authenticate import authenticate
 
 # Configuration
 BACKUP_DIR = "backup-datasources"
-CSV_FILE = os.path.expanduser("~/datasources.csv")  # safe writable path
+# Use repo working directory to avoid confusion about different user homes
+CSV_FILE = os.path.join(os.getcwd(), "datasources.csv")
 creds = authenticate()
 
 # Source definitions (only user-entered properties here)
@@ -178,7 +179,7 @@ def build_payload(source_type: str, props: Dict[str, str]) -> Dict:
 
     return {"name": props.get("ds_name", ""), "kind": kind, "properties": properties}
 
-def get_superset_fields():
+def get_superset_fields() -> List[str]:
     """
     Build a superset header that includes:
     - source_type, COMMON_PROPERTIES
@@ -201,22 +202,64 @@ def get_superset_fields():
     fields.append("timestamp")
     return fields
 
-def ensure_csv_header(superset_fields):
-    file_exists = os.path.exists(CSV_FILE)
-    if not file_exists:
-        dirpath = os.path.dirname(CSV_FILE)
-        if dirpath:
-            os.makedirs(dirpath, exist_ok=True)
-        with open(CSV_FILE, "w", newline="", encoding="utf-8") as f:
+def reconcile_and_ensure_csv(csv_path: str, superset_fields: List[str]) -> List[str]:
+    """
+    Ensure CSV exists and header contains superset_fields.
+    If file exists and header differs, rewrite file with merged header preserving rows.
+    Returns the merged header used for subsequent writes.
+    """
+    dirpath = os.path.dirname(csv_path)
+    if dirpath:
+        os.makedirs(dirpath, exist_ok=True)
+
+    if not os.path.exists(csv_path):
+        # create new file with superset header
+        with open(csv_path, "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(f, fieldnames=superset_fields)
             writer.writeheader()
+        return superset_fields
 
-def write_to_csv_record(record: Dict[str, str], superset_fields):
-    ensure_csv_header(superset_fields)
-    row = {k: record.get(k, "") for k in superset_fields}
-    with open(CSV_FILE, "a", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=superset_fields)
-        writer.writerow(row)
+    # File exists: read existing header and rows
+    with open(csv_path, "r", newline="", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        existing_fields = reader.fieldnames or []
+        rows = list(reader)
+
+    # If headers already match exactly, nothing to do
+    if existing_fields == superset_fields:
+        return superset_fields
+
+    # Compute merged header (preserve existing order, then add missing fields)
+    merged = existing_fields[:]  # keep existing order
+    for fld in superset_fields:
+        if fld not in merged:
+            merged.append(fld)
+
+    # Rewrite file with merged header and existing rows (map missing fields to "")
+    with open(csv_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=merged)
+        writer.writeheader()
+        for r in rows:
+            out = {k: r.get(k, "") for k in merged}
+            writer.writerow(out)
+
+    return merged
+
+def write_record_with_reconcile(csv_path: str, record: Dict[str, str], superset_fields: List[str]):
+    try:
+        merged_fields = reconcile_and_ensure_csv(csv_path, superset_fields)
+        row = {k: record.get(k, "") for k in merged_fields}
+        # Debug prints to help trace issues
+        print("CSV path:", csv_path)
+        print("Merged header:", merged_fields)
+        print("Row to write:", row)
+        with open(csv_path, "a", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=merged_fields)
+            writer.writerow(row)
+        print("CSV write succeeded")
+    except Exception as e:
+        print("CSV write failed:", repr(e))
+        raise
 
 def generate_backup_script(source_type: str, props: Dict[str, str], payload: Dict):
     os.makedirs(BACKUP_DIR, exist_ok=True)
@@ -315,15 +358,16 @@ def register_datasource():
     # include all user-entered properties
     for st in SOURCE_TYPES.values():
         for p in st["properties"]:
-            # only add if not already present
             if p not in record:
                 record[p] = props.get(p, "")
     # add parsed fields explicitly
     for pf in PARSED_FIELDS:
         record[pf] = props.get(pf, "")
-    record["timestamp"] = datetime.datetime.utcnow().isoformat() + "Z"
+    # Use timezone-aware timestamp
+    record["timestamp"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
 
-    write_to_csv_record(record, superset_fields)
+    # Write record with reconciliation (preserve existing rows and merge headers)
+    write_record_with_reconcile(CSV_FILE, record, superset_fields)
     generate_backup_script(source_type, props, payload)
 
 if __name__ == "__main__":
