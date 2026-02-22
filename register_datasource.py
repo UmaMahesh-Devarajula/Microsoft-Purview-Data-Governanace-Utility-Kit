@@ -51,6 +51,11 @@ def get_credentials():
 	credentials = ClientSecretCredential(client_id=creds["client_id"], client_secret=creds["client_secret"], tenant_id=creds["tenant_id"])
 	return credentials
 
+def get_admin_client():
+	credentials = get_credentials()
+	client = PurviewAccountClient(endpoint=purview_endpoint, credential=credentials, logging_enable=True)
+	return client
+
 def build_payload(source_type, props):
     kind = SOURCE_TYPES[source_type]["kind"]
     properties = {}
@@ -152,10 +157,10 @@ def register_datasource():
     payload = build_payload(source_type, props)
 
     credentials = get_credentials()
-    client = PurviewAccountClient(endpoint=purview_endpoint, credential=credentials, logging_enable=True)
+    client = get_admin_client()
 
     try:
-        response = client.data_sources.create_or_update(data_source_name=props["ds_name"], body=payload)
+        response = client.data_sources.create_or_update(props["ds_name"], body=payload)
         print("✅ Data source registered:", response)
     except Exception as e:
         print("❌ Error registering data source:", e)
@@ -188,10 +193,15 @@ def get_credentials():
 	credentials = ClientSecretCredential(client_id=creds["client_id"], client_secret=creds["client_secret"], tenant_id=creds["tenant_id"])
 	return credentials
 
+def get_admin_client():
+	credentials = get_credentials()
+	client = PurviewAccountClient(endpoint=purview_endpoint, credential=credentials, logging_enable=True)
+	return client
+
 def recreate_datasource():
     purview_endpoint = f"https://{{creds['purview_account_name']}}.purview.azure.com"
     credentials = get_credentials()
-    client = PurviewAccountClient(endpoint=purview_endpoint, credential=credentials, logging_enable=True)
+    client = get_purview_client()
 
     data_source = {payload}
 
