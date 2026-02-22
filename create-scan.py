@@ -284,12 +284,12 @@ def ensure_scan_exists(endpoint: str, token: str, datasource_name: str, scan_nam
         scan = call_purview("GET", endpoint, get_path, token, params=params)
         print("Scan exists:", scan_name)
         return scan
-    except Exception as e_get:
-        print("Scan GET failed or not found, creating. Reason:", repr(e_get))
-        put_path = get_path
-        created = call_purview("PUT", endpoint, put_path, token, params=params, body=scan_body)
+    except Exception:
+        print("Scan not found, creating...")
+        created = call_purview("PUT", endpoint, get_path, token, params=params, body=scan_body)
         print("Scan created/updated:", created.get("name", scan_name))
         return created
+
 
 def run_scan(endpoint: str, token: str, datasource_name: str, scan_name: str, scan_level: Optional[str] = None) -> Dict[str, Any]:
     path = f"/scan/datasources/{datasource_name}/scans/{scan_name}:run"
@@ -396,7 +396,7 @@ def interactive_create_key_vault_connection(endpoint: str, token: str) -> Dict[s
     print("Key Vault connection created:", resp.get("name", kv_name))
     return resp
 
-def interactive_build_scan_body(endpoint: str, token: str, datasource_type: str) -> Dict[str, Any]:
+ddef interactive_build_scan_body(endpoint: str, token: str, datasource_type: str) -> Dict[str, Any]:
     print(f"Building scan body for datasource type: {datasource_type}")
     use_cred = input("Use existing Purview credential? (y/n): ").strip().lower()
     credential_ref = None
@@ -405,6 +405,7 @@ def interactive_build_scan_body(endpoint: str, token: str, datasource_type: str)
     else:
         cred_resp = interactive_create_credential(endpoint, token)
         credential_ref = cred_resp.get("name") or input("Enter credential name you created: ").strip()
+
     props: Dict[str, Any] = {
         "scanRulesetName": None,
         "scanType": "Full",
@@ -413,15 +414,24 @@ def interactive_build_scan_body(endpoint: str, token: str, datasource_type: str)
         "scanLevel": "Full",
         "credentials": {"referenceName": credential_ref}
     }
+
     if "adls" in datasource_type.lower() or "storage" in datasource_type.lower():
         root_path = input("Enter root path to scan (container/folder) or leave blank: ").strip()
         if root_path:
             props["scanRuleset"]["scanPaths"] = [root_path]
+
     if "sql" in datasource_type.lower():
         db = input("Enter database name or leave blank: ").strip()
         if db:
             props["scanRuleset"]["database"] = db
-    return {"properties": props}
+
+    # Build full scan body with kind = datasourceType + "Credential"
+    scan_body = {
+        "kind": f"{datasource_type}Credential",
+        "properties": props
+    }
+    return scan_body
+
 
 # ---------------------------
 # Log-driven operations
