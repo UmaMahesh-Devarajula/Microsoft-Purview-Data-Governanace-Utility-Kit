@@ -17,9 +17,13 @@ creds = authenticate()
 
 # Source definitions (only user-entered properties here)
 SOURCE_TYPES = {
-    "Azure": {
+    "AzureSubscription": {
         "kind": "AzureSubscription",
         "properties": ["subscription_id", "resource_id"]
+    },
+    "AzureResourceGroup": {
+        "kind": "AzureResourceGroup",
+        "properties": ["resource_group", "subscription_id", "resource_id"]
     },
     "AdlsGen2": {
         "kind": "AdlsGen2",
@@ -130,10 +134,16 @@ def build_payload(source_type: str, props: Dict[str, str]) -> Dict:
             "resourceName": props.get("resource_name", ""),
             "subscriptionId": props.get("subscription_id", "")
         })
-    elif source_type == "Azure":
+    elif source_type == "AzureSubscription":
         properties.update({
             "subscriptionId": props.get("subscription_id", ""),
-            "resourceId": props.get("resource_id", ""),
+            "resourceId": props.get("resource_id", "")
+        })
+    elif source_type == "AzureResourceGroup":
+        properties.update({
+            "resourceGroup": props.get("resource_group"),
+            "subscriptionId": props.get("subscription_id", ""),
+            "resourceId": props.get("resource_id", "")
         })
     elif source_type == "AzureStorage":
         properties.update({
