@@ -33,6 +33,10 @@ SOURCE_TYPES = {
         "kind": "AzureSynapseWorkspace",
         "properties": ["dedicated_SqlEndpoint", "serverless_SqlEndpoint", "resource_id", "location"]
     },
+    "AmazonPostgreSql": {
+        "kind": "AmazonPostgreSql",
+        "properties": ["server_Endpoint", "Port"]
+    },
     "AdlsGen2": {
         "kind": "AdlsGen2",
         "properties": ["endpoint", "resource_id", "location"]
@@ -167,6 +171,12 @@ def build_payload(source_type: str, props: Dict[str, str]) -> Dict:
             "resourceName": props.get("resource_name", ""),
             "subscriptionId": props.get("subscription_id", "")
         })
+    elif source_type == "AmazonPostgreSql":
+        properties.update({
+            "serverEndpoint": props.get("server_Endpoint", ""),
+            "port": props.get("Port", "")
+        })
+    
     elif source_type == "AzureStorage":
         properties.update({
             "endpoint": props.get("endpoint", ""),
