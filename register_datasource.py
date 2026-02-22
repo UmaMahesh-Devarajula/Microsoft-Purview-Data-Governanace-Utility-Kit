@@ -29,6 +29,10 @@ SOURCE_TYPES = {
         "kind": "AmazonAccount",
         "properties": ["awsAccount_id"]
     },
+    "AzureSynapseAnalytics": {
+        "kind": "AzureSynapseWorkspace",
+        "properties": ["dedicated_SqlEndpoint", "serverless_SqlEndpoint", "resource_id", "location"]
+    },
     "AdlsGen2": {
         "kind": "AdlsGen2",
         "properties": ["endpoint", "resource_id", "location"]
@@ -350,7 +354,7 @@ def register_datasource():
         props[prop] = input(f"Enter {prop}: ").strip()
 
     # If Azure source and resource_id provided, parse and populate parsed fields
-    if source_type in ["AdlsGen2", "AzureStorage", "AzureSqlDatabase", "AzureCosmosDb"]:
+    if source_type in ["AdlsGen2", "AzureStorage", "AzureSqlDatabase", "AzureCosmosDb", "AzureSynapseAnalytics"]:
         resource_id = props.get("resource_id", "").strip()
         if resource_id:
             try:
