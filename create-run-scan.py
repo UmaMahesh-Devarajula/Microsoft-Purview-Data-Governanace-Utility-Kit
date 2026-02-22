@@ -21,7 +21,7 @@ def get_collection_name(admin_client, friendly_name):
 def trigger_adls_scan():
     config = authenticate()
     purview_account = config["purview_account_name"]
-    purview_endpoint = f"https://{purview_account}.purview.azure.com"
+    purview_endpoint = f"https://{purview_account}.scan.purview.azure.com"
 
     ds_name = input("Enter registered data source name: ")
     scan_name = input("Enter scan name: ")
