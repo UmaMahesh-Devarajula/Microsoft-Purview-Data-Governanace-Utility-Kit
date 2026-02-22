@@ -133,7 +133,7 @@ def build_payload(source_type: str, props: Dict[str, str]) -> Dict:
     elif source_type == "Azure":
         properties.update({
             "subscriptionId": props.get("subscription_id", ""),
-            "resourceId": f"/subscriptions/{props.get("subscription_id", "")}"
+            "resourceId": props.get("resource_id", "")
         })
     elif source_type == "AzureStorage":
         properties.update({
