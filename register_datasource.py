@@ -233,9 +233,8 @@ def recreate_datasource():
 if __name__ == "__main__":
     recreate_datasource()
 '''
-    with open(filename, "w") as f:
+    with open(filename, "w", encoding="utf-8") as f:
         f.write(script)
-    print(f"📂 Backup script created: {filename}")
 
 if __name__ == "__main__":
     register_datasource()
