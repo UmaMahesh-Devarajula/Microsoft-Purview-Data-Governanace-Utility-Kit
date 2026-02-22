@@ -396,7 +396,7 @@ def interactive_create_key_vault_connection(endpoint: str, token: str) -> Dict[s
     print("Key Vault connection created:", resp.get("name", kv_name))
     return resp
 
-ddef interactive_build_scan_body(endpoint: str, token: str, datasource_type: str) -> Dict[str, Any]:
+def interactive_build_scan_body(endpoint: str, token: str, datasource_type: str) -> Dict[str, Any]:
     print(f"Building scan body for datasource type: {datasource_type}")
     use_cred = input("Use existing Purview credential? (y/n): ").strip().lower()
     credential_ref = None
