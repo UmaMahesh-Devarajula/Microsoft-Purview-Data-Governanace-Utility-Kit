@@ -25,6 +25,10 @@ SOURCE_TYPES = {
         "kind": "AzureResourceGroup",
         "properties": ["resource_group", "subscription_id", "resource_id"]
     },
+    "AWS account": {
+        "kind": "AmazonAccount",
+        "properties": ["awsAccount_id"]
+    },
     "AdlsGen2": {
         "kind": "AdlsGen2",
         "properties": ["endpoint", "resource_id", "location"]
@@ -144,6 +148,10 @@ def build_payload(source_type: str, props: Dict[str, str]) -> Dict:
             "resourceGroup": props.get("resource_group"),
             "subscriptionId": props.get("subscription_id", ""),
             "resourceId": props.get("resource_id", "")
+        })
+    elif source_type == "AWS account":
+        properties.update({
+            "awsAccountId": props.get("awsAccount_id"),
         })
     elif source_type == "AzureStorage":
         properties.update({
