@@ -2,17 +2,13 @@
 """
 create-scan.py
 
-Purview scanning automation using endpoint:
-  https://{purview_account_name}.purview.azure.com/scan
+Purview scanning automation with Key Vault connection + credential validation.
 
-Features:
-- Normalize and validate scanning endpoint
-- Create/replace Key Vault connections
-- Create/replace credentials (SqlAuth uses Key Vault secret references)
-- Create/replace scans (includes kind and scanAuthorization)
-- Start scan runs, poll status, log to CSV/JSON
-- Generate backup scripts for credentials and scans
-- Verbose debug output for HTTP requests/responses
+- Validates/creates Key Vault connection in Purview
+- Creates SqlAuth credential referencing Key Vault secret (KeyVaultSecret object)
+- Ensures credential exists before creating scan
+- Creates scan with kind + scanAuthorizationType + scanAuthorization
+- Starts scan run, polls status, logs CSV/JSON, generates backup scripts
 
 Requirements:
 - pip install azure-identity requests
@@ -40,7 +36,7 @@ CRED_JSON = os.path.join(os.getcwd(), "credentials_log.json")
 creds = authenticate()
 
 # ---------------------------
-# Endpoint normalization & validation
+# Endpoint helpers (uses https://{account}.purview.azure.com/scan)
 # ---------------------------
 def normalize_account_name(raw: str) -> str:
     s = raw.strip()
@@ -65,36 +61,20 @@ def get_access_token_for(creds_local: Dict[str, str]) -> str:
     token = credential.get_token("https://purview.azure.net/.default")
     return token.token
 
-def validate_scanning_endpoint(endpoint: str, token: str) -> bool:
-    url = endpoint.rstrip("/") + "/azureKeyVaults"
-    params = {"api-version": API_VERSION}
-    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-    try:
-        resp = requests.get(url, headers=headers, params=params, timeout=20)
-        print("DEBUG: validation GET status:", resp.status_code)
-        return resp.status_code in (200, 204)
-    except Exception as e:
-        print("DEBUG: validation GET exception:", repr(e))
-        return False
-
-def resolve_and_confirm_endpoint(creds_local: Dict[str, str]) -> str:
-    raw = creds_local.get("purview_account_name", "")
-    candidate_prefix = normalize_account_name(raw)
-    endpoint = scanning_endpoint_for(candidate_prefix)
+def resolve_endpoint(creds_local: Dict[str, str]) -> str:
+    candidate = normalize_account_name(creds_local.get("purview_account_name", ""))
+    endpoint = scanning_endpoint_for(candidate)
     token = get_access_token_for(creds_local)
-    print("Resolved scanning endpoint:", endpoint)
-    if validate_scanning_endpoint(endpoint, token):
-        print("Endpoint validation succeeded.")
+    # quick validation
+    url = endpoint.rstrip("/") + "/azureKeyVaults"
+    resp = requests.get(url, headers={"Authorization": f"Bearer {token}"}, params={"api-version": API_VERSION}, timeout=10)
+    if resp.status_code in (200, 204):
         return endpoint
-    print("Endpoint validation failed for:", endpoint)
+    # prompt override
+    print("Auto-resolve of scanning endpoint failed. Please enter Purview account name or full endpoint.")
     while True:
-        override = input("Enter Purview account name or full scanning endpoint (or press Enter to retry): ").strip()
+        override = input("Purview account name or full endpoint: ").strip()
         if not override:
-            print("Retrying validation with normalized account name...")
-            token = get_access_token_for(creds_local)
-            if validate_scanning_endpoint(endpoint, token):
-                return endpoint
-            print("Still failing. Provide correct account name or full endpoint.")
             continue
         if override.startswith("http://") or override.startswith("https://") or ".purview.azure.com" in override:
             host = override.split("://", 1)[-1].split("/", 1)[0]
@@ -105,16 +85,15 @@ def resolve_and_confirm_endpoint(creds_local: Dict[str, str]) -> str:
                 endpoint = override.rstrip("/")
         else:
             endpoint = scanning_endpoint_for(normalize_account_name(override))
-        print("Trying endpoint:", endpoint)
         token = get_access_token_for(creds_local)
-        if validate_scanning_endpoint(endpoint, token):
-            print("Endpoint validation succeeded.")
+        url = endpoint.rstrip("/") + "/azureKeyVaults"
+        resp = requests.get(url, headers={"Authorization": f"Bearer {token}"}, params={"api-version": API_VERSION}, timeout=10)
+        if resp.status_code in (200, 204):
             return endpoint
-        else:
-            print("Validation failed for provided value. Try again or check Purview account name in Azure Portal.")
+        print("Validation failed for provided endpoint. Try again.")
 
 # ---------------------------
-# Centralized HTTP call with debug
+# HTTP call with debug
 # ---------------------------
 def call_purview(method: str, endpoint: str, path: str, token: str, params: Dict[str, str] = None, body: Any = None, timeout: int = 120) -> Any:
     url = endpoint.rstrip("/") + path
@@ -150,7 +129,7 @@ def call_purview(method: str, endpoint: str, path: str, token: str, params: Dict
     return data
 
 # ---------------------------
-# CSV / JSON reconciliation & logging
+# CSV/JSON logging helpers
 # ---------------------------
 def reconcile_and_ensure_csv(csv_path: str, superset_fields: List[str]) -> List[str]:
     dirpath = os.path.dirname(csv_path)
@@ -199,17 +178,93 @@ def append_json_log(json_path: str, entry: Dict[str, Any]):
         json.dump(logs, f, indent=2, default=str)
 
 # ---------------------------
-# Credential & Key Vault operations
+# Key Vault connection helpers
 # ---------------------------
-def create_or_replace_credential(endpoint: str, token: str, credential_name: str, credential_body: Dict[str, Any]) -> Dict[str, Any]:
-    path = f"/credentials/{credential_name}"
-    params = {"api-version": API_VERSION}
-    return call_purview("PUT", endpoint, path, token, params=params, body=credential_body)
+def key_vault_connection_exists(endpoint: str, token: str, kv_name: str) -> bool:
+    try:
+        call_purview("GET", endpoint, f"/azureKeyVaults/{kv_name}", token, params={"api-version": API_VERSION})
+        return True
+    except Exception:
+        return False
 
-def create_or_replace_key_vault_connection(endpoint: str, token: str, kv_name: str, kv_body: Dict[str, Any]) -> Dict[str, Any]:
-    path = f"/azureKeyVaults/{kv_name}"
-    params = {"api-version": API_VERSION}
-    return call_purview("PUT", endpoint, path, token, params=params, body=kv_body)
+def create_or_replace_key_vault_connection(endpoint: str, token: str, kv_name: str, base_url: str, description: Optional[str] = None) -> Dict[str, Any]:
+    body = {"properties": {"baseUrl": base_url}}
+    if description:
+        body["properties"]["description"] = description
+    return call_purview("PUT", endpoint, f"/azureKeyVaults/{kv_name}", token, params={"api-version": API_VERSION}, body=body)
+
+# ---------------------------
+# Credential helpers (SqlAuth uses KeyVaultSecret)
+# ---------------------------
+def credential_exists(endpoint: str, token: str, credential_name: str) -> bool:
+    try:
+        call_purview("GET", endpoint, f"/credentials/{credential_name}", token, params={"api-version": API_VERSION})
+        return True
+    except Exception:
+        return False
+
+def create_sqlauth_credential(endpoint: str, token: str) -> Optional[Dict[str, Any]]:
+    """
+    Interactive creation of SqlAuth credential that references a Key Vault secret.
+    Requires the secret to already exist in Key Vault.
+    """
+    name = input("Credential name: ").strip()
+    username = input("SQL username: ").strip()
+    print("SqlAuth requires the password to be stored in Key Vault.")
+    secret_name = input("Key Vault secret name (e.g., sql-password-secret): ").strip()
+    vault_name = input("Key Vault name (e.g., kvx09): ").strip()
+    vault_resource_id = input("Key Vault resourceId (full ARM id): ").strip()
+    # Validate Key Vault connection exists in Purview; if not, offer to create it
+    if not key_vault_connection_exists(endpoint, token, vault_name):
+        print(f"Key Vault connection '{vault_name}' not found in Purview.")
+        create_kv = input("Create Key Vault connection now? (y/n): ").strip().lower()
+        if create_kv == "y":
+            base_url = input("Key Vault baseUrl (https://<name>.vault.azure.net/): ").strip()
+            desc = input("Description (optional): ").strip()
+            try:
+                create_or_replace_key_vault_connection(endpoint, token, vault_name, base_url, desc)
+                print("Key Vault connection created.")
+            except Exception as e:
+                print("Failed to create Key Vault connection:", e)
+                return None
+        else:
+            print("Please create Key Vault connection in Purview first and retry.")
+            return None
+    # Build credential body referencing Key Vault secret
+    body = {
+        "kind": "SqlAuth",
+        "properties": {
+            "credential": {
+                "type": "KeyVaultSecret",
+                "secretName": secret_name,
+                "vaultName": vault_name,
+                "vaultResourceId": vault_resource_id
+            },
+            "typeProperties": {
+                "user": username,
+                "password": {
+                    "secretName": secret_name,
+                    "vaultName": vault_name,
+                    "vaultResourceId": vault_resource_id
+                }
+            }
+        }
+    }
+    try:
+        resp = create_or_replace_credential(endpoint, token, name, body)
+    except Exception as e:
+        print("Failed to create SqlAuth credential:", e)
+        return None
+    # backup and log
+    generate_credential_backup_script(name, body)
+    record = {"credential_name": name, "kind": "SqlAuth", "properties": json.dumps(body["properties"]), "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()}
+    append_csv_record(CRED_CSV, record, ["credential_name", "kind", "properties", "timestamp"])
+    append_json_log(CRED_JSON, record)
+    print("SqlAuth credential created:", resp.get("name", name))
+    return resp
+
+def create_or_replace_credential(endpoint: str, token: str, credential_name: str, credential_body: Dict[str, Any]) -> Dict[str, Any]:
+    return call_purview("PUT", endpoint, f"/credentials/{credential_name}", token, params={"api-version": API_VERSION}, body=credential_body)
 
 def generate_credential_backup_script(credential_name: str, credential_body: Dict[str, Any]):
     os.makedirs(CRED_BACKUP_DIR, exist_ok=True)
@@ -238,7 +293,7 @@ if __name__ == "__main__": main()
     print("Credential backup script created:", filename)
 
 # ---------------------------
-# Scan lifecycle operations (ensure kind + scanAuthorization)
+# Scan helpers (ensure kind + scanAuthorization)
 # ---------------------------
 def ensure_scan_exists(endpoint: str, token: str, datasource_name: str, scan_name: str, kind: str, properties: Dict[str, Any]) -> Dict[str, Any]:
     get_path = f"/datasources/{datasource_name}/scans/{scan_name}"
@@ -294,112 +349,34 @@ if __name__ == "__main__": main()
     print("Backup scan script created:", filename)
 
 # ---------------------------
-# Interactive builders (with scanAuthorization support)
+# Interactive scan body builder (adds scanAuthorization)
 # ---------------------------
-def credential_exists(endpoint: str, token: str, credential_name: str) -> bool:
-    try:
-        call_purview("GET", endpoint, f"/credentials/{credential_name}", token, params={"api-version": API_VERSION})
-        return True
-    except Exception:
-        return False
-
-def interactive_create_credential(endpoint: str, token: str) -> Optional[Dict[str, Any]]:
-    print("Create or replace a Purview credential.")
-    name = input("Credential name: ").strip()
-    print("Kinds: ServicePrincipal, AccountKey, SqlAuth, ManagedIdentity, BasicAuth, DelegatedAuth")
-    kind = input("Choose kind: ").strip()
-    properties: Dict[str, Any] = {}
-    if kind.lower() in ("serviceprincipal", "service principal"):
-        properties["tenantId"] = input("Tenant ID: ").strip()
-        properties["servicePrincipalId"] = input("Service principal ID: ").strip()
-        secret = input("Service principal secret (or leave blank to use Key Vault): ").strip()
-        if secret:
-            properties["servicePrincipalKey"] = secret
-    elif kind.lower() in ("accountkey", "account key"):
-        properties["typeProperties"] = {"accountKey": input("Account key (or leave blank to use Key Vault): ").strip()}
-    elif kind.lower() in ("sqlauth", "sql auth"):
-        print("SqlAuth requires the password to be stored in Key Vault.")
-        username = input("SQL username: ").strip()
-        use_kv = input("Is the password stored in Key Vault? (y/n): ").strip().lower()
-        if use_kv != "y":
-            print("Store the password in Key Vault first. Example:")
-            print("  az keyvault secret set --vault-name <vault> --name <secretName> --value '<password>'")
-            return None
-        secret_name = input("Key Vault secret name: ").strip()
-        vault_name = input("Key Vault name (e.g., kvx09): ").strip()
-        vault_resource_id = input("Key Vault resourceId (full ARM id): ").strip()
-        if not (secret_name and vault_name and vault_resource_id):
-            print("Missing Key Vault details. Aborting.")
-            return None
-        properties["credential"] = {"type": "KeyVaultSecret", "secretName": secret_name, "vaultName": vault_name, "vaultResourceId": vault_resource_id}
-        properties["typeProperties"] = {"user": username, "password": {"secretName": secret_name, "vaultName": vault_name, "vaultResourceId": vault_resource_id}}
-    elif kind.lower() in ("managedidentity", "managed identity"):
-        properties["typeProperties"] = {"resourceId": input("User-assigned managed identity resourceId (optional): ").strip()}
-    else:
-        raw = input("Paste credential properties JSON (or leave blank): ").strip()
-        if raw:
-            try:
-                properties = json.loads(raw)
-            except Exception:
-                properties = {"raw": raw}
-    body = {"kind": kind, "properties": properties}
-    try:
-        resp = create_or_replace_credential(endpoint, token, name, body)
-    except Exception as e:
-        print("Failed to create credential:", e)
-        return None
-    generate_credential_backup_script(name, body)
-    record = {"credential_name": name, "kind": kind, "properties": json.dumps(properties), "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()}
-    append_csv_record(CRED_CSV, record, ["credential_name", "kind", "properties", "timestamp"])
-    append_json_log(CRED_JSON, record)
-    print("Credential created:", resp.get("name", name))
-    return resp
-
-def interactive_create_key_vault_connection(endpoint: str, token: str) -> Optional[Dict[str, Any]]:
-    print("Create or replace an Azure Key Vault connection.")
-    kv_name = input("Key Vault connection name: ").strip()
-    base_url = input("Key Vault baseUrl (https://<name>.vault.azure.net/): ").strip()
-    description = input("Description (optional): ").strip()
-    body = {"properties": {"baseUrl": base_url}}
-    if description:
-        body["properties"]["description"] = description
-    try:
-        resp = create_or_replace_key_vault_connection(endpoint, token, kv_name, body)
-    except Exception as e:
-        print("Key Vault creation failed:", e)
-        return None
-    record = {"kv_name": kv_name, "baseUrl": base_url, "description": description, "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()}
-    append_csv_record(CRED_CSV, record, ["kv_name", "baseUrl", "description", "timestamp"])
-    append_json_log(os.path.join(os.getcwd(), "keyvaults_log.json"), record)
-    print("Key Vault connection created:", resp.get("name", kv_name))
-    return resp
-
 def interactive_build_scan_body(endpoint: str, token: str, datasource_type: str) -> Tuple[str, Dict[str, Any]]:
     print(f"Building scan body for datasource type: {datasource_type}")
     kind = input(f"Enter scan kind (e.g., AzureSqlDatabase, AdlsGen2) [default: {datasource_type}]: ").strip() or datasource_type
-    use_cred = input("Use existing Purview credential? (y/n): ").strip().lower()
-    credential_ref = None
-    if use_cred == "y":
-        credential_ref = input("Enter credential name: ").strip()
+    # choose credential or managed identity
+    auth_choice = input("Authorization method: 1) Credential  2) ManagedIdentity  (enter 1 or 2) [default 1]: ").strip() or "1"
+    if auth_choice == "1":
+        credential_ref = input("Enter existing Purview credential name (must exist): ").strip()
         if not credential_exists(endpoint, token, credential_ref):
-            print("Credential not found in Purview. Create it first or choose another credential.")
+            print("Credential not found in Purview. Create it first.")
             raise RuntimeError("Credential not found.")
+        scan_auth_type = "Credential"
+        scan_auth = {"credential": {"referenceName": credential_ref}}
     else:
-        cred_resp = interactive_create_credential(endpoint, token)
-        if not cred_resp:
-            raise RuntimeError("Credential creation aborted.")
-        credential_ref = cred_resp.get("name") or input("Enter credential name you created: ").strip()
-    # Build properties with explicit scanAuthorization
+        mi_resource_id = input("Enter user-assigned managed identity resourceId (full ARM id): ").strip()
+        if not mi_resource_id:
+            raise RuntimeError("Managed identity resourceId required.")
+        scan_auth_type = "ManagedIdentity"
+        scan_auth = {"managedIdentity": {"resourceId": mi_resource_id}}
     props: Dict[str, Any] = {
         "scanRulesetName": None,
         "scanType": "Full",
         "scanRuleset": {},
         "scanTrigger": {},
         "scanLevel": "Full",
-        "scanAuthorizationType": "Credential",
-        "scanAuthorization": {
-            "credential": {"referenceName": credential_ref}
-        }
+        "scanAuthorizationType": scan_auth_type,
+        "scanAuthorization": scan_auth
     }
     if "adls" in datasource_type.lower() or "storage" in datasource_type.lower():
         root_path = input("Enter root path to scan (container/folder) or leave blank: ").strip()
@@ -458,16 +435,23 @@ def run_scans_from_log(endpoint: str, token: str):
 # Main interactive flow
 # ---------------------------
 def main():
-    endpoint = resolve_and_confirm_endpoint(creds)
+    endpoint = resolve_endpoint(creds)
     token = get_access_token_for(creds)
     print("Purview Scan Automation (endpoint):", endpoint)
-    print("1) Create credential  2) Create Key Vault connection  3) Create/Run scan  4) Run scans from log  5) Exit")
+    print("1) Create SqlAuth credential (Key Vault secret)  2) Create Key Vault connection  3) Create/Run scan  4) Run scans from log  5) Exit")
     while True:
         choice = input("Choose action (1/2/3/4/5): ").strip()
         if choice == "1":
-            interactive_create_credential(endpoint, token)
+            create_sqlauth_credential(endpoint, token)
         elif choice == "2":
-            interactive_create_key_vault_connection(endpoint, token)
+            kv_name = input("Key Vault connection name: ").strip()
+            base_url = input("Key Vault baseUrl (https://<name>.vault.azure.net/): ").strip()
+            desc = input("Description (optional): ").strip()
+            try:
+                create_or_replace_key_vault_connection(endpoint, token, kv_name, base_url, desc)
+                print("Key Vault connection created.")
+            except Exception as e:
+                print("Failed to create Key Vault connection:", e)
         elif choice == "3":
             datasource_name = input("Enter datasource referenceName (as registered in Purview): ").strip()
             scan_name = input("Enter scan name: ").strip()
