@@ -8,7 +8,7 @@ from authenticate import authenticate
 
 BACKUP_DIR = "backup-datasources"
 CSV_FILE = "datasources.csv"
-config = authenticate() 
+#config = authenticate() 
 
 # Supported source types and required properties (per Microsoft docs)
 SOURCE_TYPES = {
@@ -134,7 +134,8 @@ def build_payload(source_type, props):
         "properties": properties
     }
 
-def register_datasource(config):
+def register_datasource():
+    config = authenticate()
     purview_account = config["purview_account_name"]
     endpoint = f"https://{purview_account}.purview.azure.com"
 
