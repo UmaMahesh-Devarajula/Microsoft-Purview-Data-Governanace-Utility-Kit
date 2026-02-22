@@ -7,8 +7,7 @@ from azure.purview.administration.account import PurviewAccountClient
 from authenticate import authenticate
 
 BACKUP_DIR = "backup-datasources"
-CSV_FILE = "datasources.csv"
-#config = authenticate() 
+CSV_FILE = "datasources.csv" 
 
 # Supported source types and required properties (per Microsoft docs)
 SOURCE_TYPES = {
@@ -135,10 +134,11 @@ def build_payload(source_type, props):
     }
 
 def register_datasource():
-    config = authenticate()
-    purview_account = config["purview_account_name"]
-    endpoint = f"https://{purview_account}.purview.azure.com"
-
+    creds = authenticate() 
+    purview_endpoint = f"https://{creds['purview_account_name']}.purview.azure.com"
+    purview_scan_endpoint = f"https://{creds['purview_account_name']}.scan.purview.azure.com"
+    purview_account = creds["purview_account_name"]
+    
     print("Supported source types:", ", ".join(SOURCE_TYPES.keys()))
     source_type = input("Enter data source type: ")
     if source_type not in SOURCE_TYPES:
@@ -155,7 +155,7 @@ def register_datasource():
 
     payload = build_payload(source_type, props)
 
-    credential = get_credentials(config)
+    credential = get_credentials(creds)
     client = PurviewAccountClient(endpoint=purview_endpoint, credential=credentials, logging_enable=True)
 
     try:
