@@ -90,5 +90,6 @@ def register_datasource():
     write_record_with_reconcile(CSV_FILE, record, superset_fields)
     generate_backup_script(source_type, props, payload)
 
-register_datasource()
+if __name__ == "__main__":
+    register_datasource()
 
