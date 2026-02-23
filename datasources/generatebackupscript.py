@@ -3,6 +3,7 @@ import json
 from typing import Dict, List
 
 BACKUP_DIR = "RecoverDatasources"
+
 def generate_backup_script(source_type: str, props: Dict[str, str], payload: Dict):
     os.makedirs(BACKUP_DIR, exist_ok=True)
     filename = os.path.join(BACKUP_DIR, f"backup-{props.get('ds_name','datasource')}_registration.py")
