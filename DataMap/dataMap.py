@@ -1,5 +1,4 @@
 import sys
-import purview
 from datasources.registerdatasource import register_datasource
 
 def datamap():    
