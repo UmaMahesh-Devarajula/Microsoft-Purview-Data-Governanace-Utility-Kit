@@ -4,24 +4,22 @@ import csv
 import datetime
 import json
 from typing import Dict, List
-from azure.identity import ClientSecretCredential
-from azure.purview.scanning import PurviewScanningClient
-from azure.purview.administration.account import PurviewAccountClient
+from purview-scan-client import get_purview_scan_client
 from authenticate import authenticate
 from data-sources import SOURCE_TYPES
 from data-sources import COMMON_PROPERTIES
 from data-sources import PARSED_FIELDS
 from build_payload import build_payload
 from parse_resource_id import parse_resource_id
+from resolve-collection import resolve_collection_name
+from generate-registered-datasources-csv import get_superset_fields
+from generate-registered-datasources-csv import reconcile_and_ensure_csv
+from generate-registered-datasources-csv import write_record_with_reconcile
 
-# Configuration
-BACKUP_DIR = "backup-datasources"
 # Use repo working directory to avoid confusion about different user homes
-CSV_FILE = os.path.join(os.getcwd(), "datasources.csv")
-creds = authenticate()
+CSV_FILE = os.path.join(os.getcwd(), "registered-datasources.csv")
 
 def register_datasource():
-
     print("Supported source types:", ", ".join(SOURCE_TYPES.keys()))
     source_type = input("Enter data source type: ").strip()
     if source_type not in SOURCE_TYPES:
@@ -64,7 +62,7 @@ def register_datasource():
     print("Payload being sent:")
     print(json.dumps(payload, indent=2))
 
-    client = get_purview_client()
+    client = get_purview_scan_client()
     try:
         response = client.data_sources.create_or_update(props.get("ds_name", ""), body=payload)
         print("Data source registered:", response)

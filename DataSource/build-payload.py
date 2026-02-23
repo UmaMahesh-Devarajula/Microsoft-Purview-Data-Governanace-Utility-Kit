@@ -1,3 +1,8 @@
+import os
+import json
+from typing import Dict, List
+from data-sources import SOURCE_TYPES
+
 def build_payload(source_type: str, props: Dict[str, str]) -> Dict:
     kind = SOURCE_TYPES[source_type]["kind"]
     properties = {}

@@ -1,3 +1,5 @@
+from typing import Dict, List
+
 def parse_resource_id(resource_id: str) -> Dict[str, str]:
     """
     Parse an Azure resourceId string into subscriptionId, resourceGroup, and resourceName.

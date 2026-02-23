@@ -100,7 +100,7 @@ def get_credentials():
         tenant_id=creds["tenant_id"]
     )
 
-def get_purview_client():
+def get_purview_scan_client():
     credentials = get_credentials()
     return PurviewScanningClient(
         endpoint=f"https://{creds['purview_account_name']}.scan.purview.azure.com",
@@ -108,7 +108,7 @@ def get_purview_client():
         logging_enable=True
     )
 
-def get_admin_client():
+def get_purview_admin_client():
     credentials = get_credentials()
     return PurviewAccountClient(
         endpoint=f"https://{creds['purview_account_name']}.purview.azure.com",
@@ -117,7 +117,7 @@ def get_admin_client():
     )
 
 def resolve_collection_name(user_collection_name: str) -> str:
-    admin_client = get_admin_client()
+    admin_client = get_purview_admin_client()
     try:
         collection_list = admin_client.collections.list_collections()
         for collection in collection_list:
@@ -361,7 +361,7 @@ def get_credentials():
         tenant_id=creds["tenant_id"]
     )
 
-def get_purview_client():
+def get_purview_scan_client():
     credentials = get_credentials()
     return PurviewScanningClient(
         endpoint=f"https://{{creds['purview_account_name']}}.scan.purview.azure.com",
@@ -370,7 +370,7 @@ def get_purview_client():
     )
 
 def recreate_datasource():
-    client = get_purview_client()
+    client = get_purview_scan_client()
     data_source = {json.dumps(payload, indent=2)}
     response = client.data_sources.create_or_update(data_source_name="{props.get('ds_name','')}", body=data_source)
     print("Data source recreated:", response)
@@ -425,7 +425,7 @@ def register_datasource():
     print("Payload being sent:")
     print(json.dumps(payload, indent=2))
 
-    client = get_purview_client()
+    client = get_purview_scan_client()
     try:
         response = client.data_sources.create_or_update(props.get("ds_name", ""), body=payload)
         print("Data source registered:", response)

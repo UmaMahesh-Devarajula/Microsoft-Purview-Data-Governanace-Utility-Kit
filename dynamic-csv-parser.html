@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dynamic CSV Table Column Hiding</title>
+  <style>
+    table {
+      border-collapse: collapse;
+      width: 80%;
+      margin: 20px auto;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+    td.clickable {
+      cursor: pointer;
+      background-color: #e9f7ef;
+    }
+    #upload-section {
+      text-align: center;
+      margin: 20px;
+    }
+    #reset-btn {
+      margin-top: 10px;
+      padding: 8px 16px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h2 style="text-align:center;">Upload CSV and Interact with Table</h2>
+
+  <div id="upload-section">
+    <input type="file" id="csv-file" accept=".csv" />
+    <br>
+    <button id="reset-btn">Reset Table</button>
+  </div>
+
+  <table id="data-table">
+    <thead>
+      <tr id="header-row"></tr>
+    </thead>
+    <tbody id="table-body"></tbody>
+  </table>
+
+  <!-- PapaParse CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+  <script>
+    let data = [];
+    let headers = [];
+
+    document.getElementById("csv-file").addEventListener("change", function(event) {
+      const file = event.target.files[0];
+      if (file) {
+        Papa.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          complete: function(results) {
+            data = results.data;
+            headers = results.meta.fields;
+            renderTable();
+          }
+        });
+      }
+    });
+
+    function renderTable() {
+      const headerRow = document.getElementById("header-row");
+      const tableBody = document.getElementById("table-body");
+
+      // Clear previous table
+      headerRow.innerHTML = "";
+      tableBody.innerHTML = "";
+
+      // Render headers
+      headers.forEach(h => {
+        const th = document.createElement("th");
+        th.textContent = h;
+        headerRow.appendChild(th);
+      });
+
+      // Render rows
+      data.forEach((row, rowIndex) => {
+        const tr = document.createElement("tr");
+        headers.forEach(h => {
+          const td = document.createElement("td");
+          td.textContent = row[h] || "";
+          if (row[h] && row[h].trim() !== "") {
+            td.classList.add("clickable");
+            td.addEventListener("click", () => handleClick(rowIndex));
+          }
+          tr.appendChild(td);
+        });
+        tableBody.appendChild(tr);
+      });
+    }
+
+    function handleClick(rowIndex) {
+      resetTable(); // Reset before applying new hide rules
+
+      // Hide columns with null/empty values in clicked row
+      headers.forEach((h, colIndex) => {
+        const value = data[rowIndex][h];
+        if (!value || value.trim() === "") {
+          document.querySelectorAll(`#data-table td:nth-child(${colIndex+1}), 
+                                     #data-table th:nth-child(${colIndex+1})`)
+                  .forEach(el => el.style.display = "none");
+        }
+      });
+    }
+
+    function resetTable() {
+      headers.forEach((h, colIndex) => {
+        document.querySelectorAll(`#data-table td:nth-child(${colIndex+1}), 
+                                   #data-table th:nth-child(${colIndex+1})`)
+                .forEach(el => el.style.display = "");
+      });
+    }
+
+    // Reset button handler
+    document.getElementById("reset-btn").addEventListener("click", resetTable);
+  </script>
+</body>
+</html>
