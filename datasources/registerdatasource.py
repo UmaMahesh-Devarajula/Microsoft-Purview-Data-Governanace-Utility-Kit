@@ -12,9 +12,9 @@ from datasources.datasources import PARSED_FIELDS
 from datasources.buildpayload import build_payload
 from datasources.parseresourceId import parse_resource_id
 from Collections.resolvecollection import resolve_collection_name
-from datasourcesgenerateregistereddatasourcescsv import get_superset_fields
-from datasourcesgenerateregistereddatasourcescsv import reconcile_and_ensure_csv
-from datasourcesgenerateregistereddatasourcescsv import write_record_with_reconcile
+from datasources.generateregistereddatasourcescsv import get_superset_fields
+from datasources.generateregistereddatasourcescsv import reconcile_and_ensure_csv
+from datasources.generateregistereddatasourcescsv import write_record_with_reconcile
 
 # Use repo working directory to avoid confusion about different user homes
 CSV_FILE = os.path.join(os.getcwd(), "registered-datasources.csv")
