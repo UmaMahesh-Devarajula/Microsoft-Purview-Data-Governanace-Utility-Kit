@@ -1,5 +1,5 @@
-from credential import get_credentials
-from authenticate import authenticate
+from PurviewCredentials.credential import get_credentials
+from Authenticate.authenticate import authenticate
 from azure.purview.administration.account import PurviewAccountClient
 
 def get_purview_admin_client():

@@ -65,6 +65,3 @@ def createpurview():
             break
         time.sleep(30)    
 
-# Run script
-createpurview()
-

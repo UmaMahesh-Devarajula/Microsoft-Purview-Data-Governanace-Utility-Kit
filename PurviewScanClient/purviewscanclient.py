@@ -1,5 +1,5 @@
-from credential import get_credentials
-from authenticate import authenticate
+from PurviewCredentials.credential import get_credentials
+from Authenticate.authenticate import authenticate
 from azure.purview.scanning import PurviewScanningClient
 
 def get_purview_scan_client():

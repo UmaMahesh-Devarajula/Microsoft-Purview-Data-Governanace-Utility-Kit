@@ -5,7 +5,7 @@ from typing import Dict, List
 BACKUP_DIR = "RecoverDatasources"
 def generate_backup_script(source_type: str, props: Dict[str, str], payload: Dict):
     os.makedirs(BACKUP_DIR, exist_ok=True)
-    filename = os.path.join(BACKUP_DIR, f"backup-{props.get('ds_name','datasource')}-registration.py")
+    filename = os.path.join(BACKUP_DIR, f"backup-{props.get('ds_name','datasource')}_registration.py")
     script = f'''import json
 from azure.identity import ClientSecretCredential
 from azure.purview.scanning import PurviewScanningClient
@@ -34,8 +34,7 @@ def recreate_datasource():
     response = client.data_sources.create_or_update(data_source_name="{props.get('ds_name','')}", body=data_source)
     print("Data source recreated:", response)
 
-if __name__ == "__main__":
-    recreate_datasource()
+recreate_datasource()
 '''
     with open(filename, "w", encoding="utf-8") as f:
         f.write(script)

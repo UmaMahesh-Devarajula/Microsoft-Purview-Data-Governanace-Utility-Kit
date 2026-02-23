@@ -1,4 +1,4 @@
-from purview-client import get_purview_admin_client
+from PurviewClient.purviewclient import get_purview_admin_client
 
 def resolve_collection_name(user_collection_name: str) -> str:
     admin_client = get_purview_admin_client()

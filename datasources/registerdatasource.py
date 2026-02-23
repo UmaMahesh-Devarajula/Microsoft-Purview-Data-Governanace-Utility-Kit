@@ -4,17 +4,17 @@ import csv
 import datetime
 import json
 from typing import Dict, List
-from purview-scan-client import get_purview_scan_client
-from authenticate import authenticate
-from data-sources import SOURCE_TYPES
-from data-sources import COMMON_PROPERTIES
-from data-sources import PARSED_FIELDS
-from build_payload import build_payload
-from parse_resource_id import parse_resource_id
-from resolve-collection import resolve_collection_name
-from generate-registered-datasources-csv import get_superset_fields
-from generate-registered-datasources-csv import reconcile_and_ensure_csv
-from generate-registered-datasources-csv import write_record_with_reconcile
+from PurviewScanClient.purviewscanclient import get_purview_scan_client
+from Authenticate.authenticate import authenticate
+from datasources.datasources import SOURCE_TYPES
+from datasources.datasources import COMMON_PROPERTIES
+from datasources.datasources import PARSED_FIELDS
+from datasources.buildpayload import build_payload
+from datasources.parseresourceid import parse_resource_id
+from Collections.resolvecollection import resolve_collection_name
+from datasourcesgenerateregistereddatasourcescsv import get_superset_fields
+from datasourcesgenerateregistereddatasourcescsv import reconcile_and_ensure_csv
+from datasourcesgenerateregistereddatasourcescsv import write_record_with_reconcile
 
 # Use repo working directory to avoid confusion about different user homes
 CSV_FILE = os.path.join(os.getcwd(), "registered-datasources.csv")
@@ -90,6 +90,5 @@ def register_datasource():
     write_record_with_reconcile(CSV_FILE, record, superset_fields)
     generate_backup_script(source_type, props, payload)
 
-if __name__ == "__main__":
-    register_datasource()
+register_datasource()
 
