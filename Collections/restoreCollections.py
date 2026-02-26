@@ -55,9 +55,9 @@ def recreate_from_csv():
                     else:
                         print(f"ERROR {response.status_code}: {response.text}")
 
-                create_domain(domain_name, domain_friendly_name)
+                    create_domain(domain_name, domain_friendly_name)
         
-        continue
+            continue
             
         collection_body = {
             "friendlyName": row['friendlyName'],
