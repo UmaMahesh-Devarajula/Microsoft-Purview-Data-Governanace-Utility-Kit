@@ -1,4 +1,5 @@
 from PurviewClient.purviewclient import get_purview_admin_client
+from datetime import datetime
 import pandas as pd
 import os
 # Fetch collections
@@ -16,7 +17,7 @@ for coll in collections:
 
 # Write to CSV
 df = pd.DataFrame(collection_data)
-df.to_csv("purview_hierarchy.csv", index=False)
+df.to_csv(f"purview_hierarchy{datetime.now()}.csv", index=False)
 print("Collection structure exported to purview_hierarchy.csv")
 
 if __name__ == "__main__":
