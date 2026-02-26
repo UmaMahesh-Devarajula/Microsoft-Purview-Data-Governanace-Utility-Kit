@@ -12,7 +12,6 @@ def datamap():
         elif choice == "2":
             listCollections()
         elif choice == "3":
-            def my_function():
                 import purview# Import inside the function
                 purview()
         elif choice == "4":
