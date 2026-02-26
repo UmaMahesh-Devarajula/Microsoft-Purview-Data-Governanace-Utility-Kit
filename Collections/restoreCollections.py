@@ -28,7 +28,7 @@ def recreate_from_csv():
         }
         
         try:
-            client.collections.create_or_update(
+            client.collections.create_or_update_collection(
                 collection_name=row['name'], 
                 collection=collection_body
             )
