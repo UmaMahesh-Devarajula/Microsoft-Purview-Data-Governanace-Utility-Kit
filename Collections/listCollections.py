@@ -11,12 +11,11 @@ def listCollections():
     # Extract hierarchy info
     collection_data = []
     for coll in collections:
-        collection_data.append({
-            "collection_name": coll.name,
-            "friendly_name": coll.friendly_name,
-            # Parent collection is usually a dict containing 'referenceName'
-            "parent_collection": coll.parent_collection.reference_name if coll.parent_collection else None
-        })
+        collections_data.append({
+        "name": coll.get("name"),
+        "friendlyName": coll.get("friendlyName"),
+        "parentName": coll.get("parentCollection", {}).get("referenceName")
+    })
 
     # Write to CSV
     df = pd.DataFrame(collection_data)
