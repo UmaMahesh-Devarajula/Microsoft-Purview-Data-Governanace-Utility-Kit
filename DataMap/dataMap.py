@@ -1,5 +1,6 @@
 import sys
 from datasources.registerdatasource import register_datasource
+from Collections.listCollections import listCollections
 
 def datamap():    
         
@@ -9,7 +10,7 @@ def datamap():
         if choice == "1":
             register_datasource()
         elif choice == "2":
-            create_scan()
+            listCollections()
         elif choice == "3":
             purview()
         elif choice == "4":

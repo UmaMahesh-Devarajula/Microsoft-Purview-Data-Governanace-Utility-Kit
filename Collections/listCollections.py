@@ -10,3 +10,6 @@ def listCollections():
         # If admin call fails, fall back to user-provided name
         print(e)
         pass
+
+if __name__ == "__main__":
+    list_collections()
