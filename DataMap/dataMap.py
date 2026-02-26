@@ -1,4 +1,5 @@
 import sys
+import purview
 from datasources.registerdatasource import register_datasource
 from Collections.listCollections import listCollections
 
