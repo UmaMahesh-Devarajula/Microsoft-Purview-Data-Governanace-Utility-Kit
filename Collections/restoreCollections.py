@@ -30,14 +30,12 @@ def recreate_from_csv():
                     # 2. Get Auth Token using Service Principal
                     r=authenticate()
                     cred = ClientSecretCredential(r["tenant_id"], r["client_id"], r["client_secret"])
-                    #token = cred.get_token("https://purview.azure.net/.default")
-                   # print(token.token)
-                    token=input("enter token")
+                    token = cred.get_token("https://purview.azure.net/.default")
 
                     # 3. Prepare REST Request
                     url = f" https://{r["tenant_id"]}-api.purview-service.microsoft.com/account/domains/{domain_friendly_name}?api-version=2023-12-01-preview"
                     headers = {
-                        "Authorization": f"Bearer {token}",
+                        "Authorization": f"Bearer {token.token}",
                         "Content-Type": "application/json"
                     }
                     body = {
