@@ -24,8 +24,7 @@ def recreate_from_csv():
             "parentCollection": {
                 "referenceName": row['parentName'],
                 "type": "CollectionReference"
-            },
-            "description": row['description'] if not pd.isna(row['description']) else ""
+            }
         }
         
         try:
