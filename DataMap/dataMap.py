@@ -1,5 +1,4 @@
 import sys
-import purview
 from datasources.registerdatasource import register_datasource
 from Collections.listCollections import listCollections
 
@@ -13,7 +12,9 @@ def datamap():
         elif choice == "2":
             listCollections()
         elif choice == "3":
-            purview()
+            def my_function():
+                import purview# Import inside the function
+                purview()
         elif choice == "4":
             print("Exiting... Goodbye!")
             sys.exit(0)
