@@ -23,15 +23,17 @@ def recreate_from_csv():
         if pd.isna(row['parentName']):
             if row['name'] != row['friendlyName']:
                 domain_name= row['name']
+                print(domain_name)
                 domain_friendly_name = row['friendlyName']  
                 def create_domain(domain_name, domain_friendly_name):
                     # 2. Get Auth Token using Service Principal
                     r=authenticate()
                     cred = ClientSecretCredential(r["tenant_id"], r["client_id"], r["client_secret"])
                     token = cred.get_token("https://purview.azure.net")
+                    print(token.token)
 
                     # 3. Prepare REST Request
-                    url = f"{r["tenant_id"]}-api.purview-service.microsoft.com/account/domains/{row['name']}?api-version=2023-12-01-preview"
+                    url = f"{r["tenant_id"]}-api.purview-service.microsoft.com/account/domains/{domain_name}?api-version=2023-12-01-preview"
                     headers = {
                         "Authorization": f"Bearer {token.token}",
                         "Content-Type": "application/json"
