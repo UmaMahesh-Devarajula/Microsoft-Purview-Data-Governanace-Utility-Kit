@@ -57,7 +57,7 @@ def recreate_from_csv():
         else:
             collection_body = {
                 "friendlyName": row['friendlyName'],
-                "description": row['description']
+                "description": f"{row['description']}",
                 "parentCollection": {
                     "referenceName": row['parentName'],
                     "type": "CollectionReference"
