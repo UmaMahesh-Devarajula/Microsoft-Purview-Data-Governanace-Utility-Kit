@@ -56,10 +56,7 @@ def recreate_from_csv():
                         print(f"ERROR {response.status_code}: {response.text}")
 
                 create_domain(domain_name, domain_friendly_name)
-        continue
-
-        if pd.isna(row['parentName']):
-            continue
+        else:
             collection_body = {
                 "friendlyName": row['friendlyName'],
                 "parentCollection": {
@@ -67,7 +64,7 @@ def recreate_from_csv():
                     "type": "CollectionReference"
                 }
             }
-        
+
             try:
                 client.collections.create_or_update_collection(
                     collection_name=row['name'], 
