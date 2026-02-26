@@ -42,7 +42,7 @@ def recreate_from_csv():
                         "properties": {
                             "containerType":"Domain",
                             "friendlyName": domain_friendly_name,
-                            "description": row['description']
+                            "description": f"{row['description']}"
                         }
                     }
 
@@ -57,6 +57,7 @@ def recreate_from_csv():
         else:
             collection_body = {
                 "friendlyName": row['friendlyName'],
+                "description": row['description']
                 "parentCollection": {
                     "referenceName": row['parentName'],
                     "type": "CollectionReference"
