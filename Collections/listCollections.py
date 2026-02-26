@@ -6,7 +6,7 @@ import os
 client = get_purview_admin_client()
 # Fetch collections
 collections = client.collections.list_collections()
-
+print(collections)
 # Extract hierarchy info
 collection_data = []
 for coll in collections:
