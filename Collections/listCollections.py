@@ -2,6 +2,8 @@ from PurviewClient.purviewclient import get_purview_admin_client
 from datetime import datetime
 import pandas as pd
 import os
+
+client = get_purview_admin_client()
 # Fetch collections
 collections = client.collections.list_collections()
 
