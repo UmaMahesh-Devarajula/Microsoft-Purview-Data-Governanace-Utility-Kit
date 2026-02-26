@@ -1,6 +1,6 @@
 from PurviewClient.purviewclient import get_purview_admin_client
 
-def listCollections:
+def listCollections():
     admin_client = get_purview_admin_client()
     try:
         collection_list = admin_client.collections.list_collections()
