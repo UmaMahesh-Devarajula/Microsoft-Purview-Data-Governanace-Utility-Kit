@@ -1,6 +1,6 @@
 import os
 import csv
-import datetime
+from datetime import datetime
 import json
 from typing import Dict, List
 from PurviewScanClient.purviewscanclient import get_purview_scan_client
