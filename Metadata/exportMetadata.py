@@ -6,7 +6,7 @@ from PurviewCatalogClient.purviewcatalogclient import get_purview_catalog_client
 date=(datetime.now().strftime('%Y-%m-%%d'))
 OUTPUT_FILE = f"Metadata\purview_full_backup{date}.json"
 
-def export_full_metadata():
+def exportMetadata():
     # 1. Initialize catalog client
     
     client = get_purview_catalog_client()
@@ -58,4 +58,4 @@ def export_full_metadata():
     print(f"\nSuccess! Full metadata for {len(full_backup_data)} assets saved to {OUTPUT_FILE}")
 
 if __name__ == "__main__":
-    export_full_metadata()
+    exportMetadata()
