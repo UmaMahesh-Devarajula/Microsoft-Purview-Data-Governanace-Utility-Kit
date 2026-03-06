@@ -38,7 +38,7 @@ This project shows how to:
   - **Delete a Data Sources**
   - **Export DataSources Info into JSON**
   - **Restore DataSources from JSON file**
-  - **!comming soon)!**
+  - **!comming soon!**
       - **Create Scan**
       - **Trigger scan**
       - **Export Metadata**
