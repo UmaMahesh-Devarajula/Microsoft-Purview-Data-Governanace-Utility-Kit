@@ -32,6 +32,16 @@ This project shows how to:
     - **List Collections**
     - **Export Collections info into CSV**
     - **Restore Collections from CSV**
+- **Data Map - Data Sources**
+      - **Register a Data Source**
+      - **Delete a Data Sources**
+      - **Export DataSources Info into JSON**
+      - **Restore DataSources from JSON file**
+      **(comming soon)**
+          - **Create Scan**
+          - **Trigger scan**
+          - **Export Metadata**
+          - **Restore Metadata**
 ---
 ## 🚀 Getting Started
 
