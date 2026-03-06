@@ -8,23 +8,6 @@ import time
 
 def createpurview():
 
-    Prerequisites = """
-    To create purview account please ensure you meet the following Prerequisites:
-    Azure subscription.
-    Service Principal
-    The user account(Service Principal) that you use to sign in to Azure must be a member of the contributor or owner role, or an administrator of the Azure subscription.
-    You must register the 'Microsoft.Purview' resource provider within your Azure subscription.
-
-    If you've met the prerequisites, please ensure you have the following details to procced further
-    Tenant ID
-    Subscription ID
-    Service principal client ID
-    Service principal Secret Value
-    Resource Group Name (if it's not an existing resource group, this program will create this resource group)
-    Region (for your resource group and your Microsoft Purview account.)
-    """
-
-    print(Prerequisites)
     Tid= input("Enter Tenant ID:")
     subscription_id = input("Enter Azure Subscription ID:")
     SPid = input("Enter Service Principals Application (client) ID:")
