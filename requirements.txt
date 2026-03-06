@@ -11,3 +11,4 @@ azure-purview-account
 azure-core
 azure-mgmt-resource
 azure-mgmt-purview
+pandas
