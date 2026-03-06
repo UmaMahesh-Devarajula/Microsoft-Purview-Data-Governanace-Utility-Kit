@@ -30,13 +30,13 @@ def restoreCollections():
             }
 
         try:
-                client.collections.create_or_update_collection(
-                    collection_name=row['name'], 
-                    collection=collection_body
+            client.collections.create_or_update_collection(
+                collection_name=row['name'], 
+                collection=collection_body
                 )
                 print(f"Success: {row['friendlyName']}")
-            except Exception as e:
-                print(f"Failed {row['friendlyName']}: {e}")
+        except Exception as e:
+            print(f"Failed {row['friendlyName']}: {e}")
 
 if "__name__" == "__main__":
     restoreCollections()
