@@ -1,6 +1,7 @@
 import sys
 from Collections.createCollection import createCollection
 from Collections.listCollections import listCollections
+from Collections.deleteCollection import deleteCollection
 from Collections.restoreCollections import restoreCollections
 from Collections.exportCollections import exportCollections
 
