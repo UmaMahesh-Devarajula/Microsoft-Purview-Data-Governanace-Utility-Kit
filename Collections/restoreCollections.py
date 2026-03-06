@@ -6,14 +6,14 @@ import csv
 
 def restoreCollections():
     client = get_purview_admin_client()
-    file_path=input("Enter collection hierarchy file path")
+    file_path=input("Enter collection hierarchy file path: ")
 
     if not os.path.exists(file_path):
         print(f"Error: {file_path} not found.")
         return
 
     df = pd.read_csv(file_path)
-    
+
     # Recreate collections in order
     for _, row in df.iterrows():
         # Skip root (usually has no parentName in the export)
