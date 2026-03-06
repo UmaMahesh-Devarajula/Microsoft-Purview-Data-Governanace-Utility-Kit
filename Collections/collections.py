@@ -1,4 +1,5 @@
 import sys
+from Collections.createCollection import createCollection
 from Collections.restoreCollections import restoreCollections
 from Collections.exportCollections import exportCollections
 

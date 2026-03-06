@@ -1,0 +1,25 @@
+from PurviewClient.purviewclient import get_purview_admin_client
+from datetime import datetime
+
+def createCollection():
+    client = get_purview_admin_client()
+    c_name = input("Enter Collection Name: ")
+    c_description = input("Enter collection description: ")
+    c_parent = input("Enter parent collection name: ")
+
+    body = {
+       "description": f"{c_description}",  # Optional. Gets or sets the description.
+       "friendlyName": f"{c_name}",  # Optional. Gets or sets the friendly name of the collection.
+       "name": f"{c_name}",  # Optional. Gets the name.
+       "parentCollection": {
+           "referenceName": f"{c_parent}",  # Optional. Gets or sets the reference name.
+           "type": "CollectionReference"  # Optional. Default value is "CollectionReference". Gets or sets the reference type property.
+       }
+       
+   }
+
+  response= client.client.create_or_update_collection(collection_name: f"{c_name}", collection: Any, body: f"{body}")
+  print(response)
+
+if "__name__" == "__main__":
+    createCollection()
