@@ -37,3 +37,8 @@ This project shows how to:
 git clone https://github.com/UmaMahesh-Devarajula/Microsoft-Purview-Data-Governanace-Utility-Kit.git
 cd Microsoft-Purview-Data-Governanace-Utility-Kit
 py -m pip install -r requirements.txt
+purview.py
+
+### **Menu**
+<img width="565" height="134" alt="image" src="https://github.com/user-attachments/assets/c2e8abd8-84c1-4ac2-a8aa-2152544c3b94" />
+
