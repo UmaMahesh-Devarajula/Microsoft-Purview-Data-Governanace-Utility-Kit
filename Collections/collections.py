@@ -1,41 +1,39 @@
 import sys
 from Collections.createCollection import createCollection
+from Collections.listCollections import listCollections
 from Collections.restoreCollections import restoreCollections
 from Collections.exportCollections import exportCollections
 
 def collections():
     while True:
         print("""
-        1. Create Collection
-        2. Update Collection
-        3. List Collections
-        4. Delete Collection
-        5. Export Collections
-        6. Restore Collections (using the exported file)
-        7. Go to Data Map
-        8. Go to Purview 
-        9. Exit
+        1. Create or Update Collection
+        2. List Collections
+        3. Delete Collection
+        4. Export Collections
+        5. Restore Collections (using the exported file)
+        6. Go to Data Map
+        7. Go to Purview 
+        8. Exit
         """)
         choice = input("Enter your choice: ")
         if choice == "1":
             createCollection()
         elif choice == "2":
-            updateCollection()
-        elif choice == "3":
             listCollections()
-        elif choice == "4":
+        elif choice == "3":
             deleteCollection()
-        elif choice == "5":
+        elif choice == "4":
             exportCollections()
-        elif choice == "6":
+        elif choice == "5":
             restoreCollections()
-        elif choice == "7":
+        elif choice == "6":
             from DataMap.dataMap import datamap
             dataMap.datamap()
-        elif choice == "8":
+        elif choice == "7":
                 import purview# Import inside the function
                 purview.purview()
-        elif choice == "9":
+        elif choice == "8":
             print("Exiting... Goodbye!")
             sys.exit(0)
         else:
