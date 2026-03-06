@@ -34,6 +34,6 @@ This project shows how to:
 
 ### Installation
 ```bash
-git clone https://github.com/UmaMahesh-Devarajula/purview-data-governance-automation.git
-cd purview-data-governance-automation
+git clone https://github.com/UmaMahesh-Devarajula/Microsoft-Purview-Data-Governanace-Utility-Kit.git
+cd Microsoft-Purview-Data-Governanace-Utility-Kit
 py -m pip install -r requirements.txt
