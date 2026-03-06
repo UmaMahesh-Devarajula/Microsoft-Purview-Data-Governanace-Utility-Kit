@@ -29,7 +29,7 @@ This project shows how to:
 - **Create Purview Account**
 -**Data Map - Collections**
     -**Create or Update Collection**
-    - **List Collections**
+    -**List Collections**
     -**Export Collections info into CSV**
     -**Restore Collections from CSV**
 
