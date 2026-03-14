@@ -15,7 +15,7 @@ def datamap():
         if choice == "1":
             collections()
         elif choice == "2":
-            datasources()
+            dataSources()
         elif choice == "3":
                 import purview# Import inside the function
                 purview.purview()
