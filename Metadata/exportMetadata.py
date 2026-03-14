@@ -7,26 +7,27 @@ def exportmetadata():
     client = get_purview_catalog_client()
 
     all_guids = []
+    limit = 100
+    offset = 0
     ds_type = input("Enter Data Source Type: ")
 
     date=(datetime.now().strftime('%Y-%m-%d-%H-%M-%S'))
     OUTPUT_FILE = fr"Metadata\purview_{ds_type}_backup_{date}.json"
 
-    body_input = {
-        "keywords": "*",
-        "limit": 1000,
-        "offset": 0,
-        "filter": {
-            "and": [
-                {
-                    "assetType": ds_type
-                }
-            ]
-        }
-    }
-
     print("Step 1: Collecting GUIDs...")
     while True:
+        body_input = {
+            "keywords": "*",
+            "limit": limit,
+            "offset": offset,
+            "filter": {
+                "and": [
+                    {
+                        "assetType": ds_type
+                    }
+                ]
+            }
+        }
         response = client.discovery.query(search_request=body_input)
         batch = response.get("value", [])
         if not batch:
