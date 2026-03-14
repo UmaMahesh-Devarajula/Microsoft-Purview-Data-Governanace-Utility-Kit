@@ -6,23 +6,21 @@ def listdatasources():
 
     for s in ds:
         print(s)
-    # rows = []
-
-    #for c in collections:
-        # rows.append([
-        #     c.get("name"),
-        #     c.get("friendlyName"),
-        #     c.get("description"),
-        #     c.get("parentCollection", {}).get("referenceName", "-"),
-        #     c["systemData"].get("createdAt"),
-        #     c.get("collectionProvisioningState")
-        # ])
+        
+    rows = []
+    for d in ds:
+        rows.append([
+            d.get("kind"),
+            d.get("name"),
+            d.get("description"),
+            d.get("properties")
+        ])
 
     # Define headers
-    #headers = ["Name", "Friendly Name", "Description", "Parent", "Created At", "State"]
+    headers = ["Kind", "Data Source Name", "Description", "Properties"]
 
     # Print table
-    #print(tabulate(rows, headers=headers, tablefmt="grid"))
+    print(tabulate(rows, headers=headers, tablefmt="grid"))
 
 if "__name__" == "__main__":
     listdatasources()
