@@ -65,7 +65,7 @@ def registerdatasource():
 
     client = get_purview_scan_client()
     try:
-        response = client.data_sources.delete(props.get("ds_name", ""), body=payload)
+        response = client.data_sources.create_or_update(props.get("ds_name", ""), body=payload)
         print("Data source registered:", response)
     except Exception as e:
         print("Error registering data source:", e)
