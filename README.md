@@ -27,7 +27,6 @@ This project shows how to:
 - **Create Purview Account**
 - **Data Map**
   
-![Alt text](https://github.com/UmaMahesh-Devarajula/Microsoft-Purview-Data-Governanace-Utility-Kit/blob/5a9a5c081e11cf312670644e02486682888317d5/datasources/Screenshot%202026-03-14%20182240.png)
 -  **Collections**
     - **Create or Update Collection**
     - **Delete Collection**
