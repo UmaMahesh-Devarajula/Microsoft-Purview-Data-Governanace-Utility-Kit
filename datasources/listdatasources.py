@@ -1,4 +1,5 @@
 from PurviewScanClient.purviewscanclient import get_purview_scan_client
+from tabulate import tabulate
 
 def listdatasources():
     client = get_purview_scan_client()
@@ -6,7 +7,7 @@ def listdatasources():
 
     for s in ds:
         print(s)
-        
+
     rows = []
     for d in ds:
         rows.append([
