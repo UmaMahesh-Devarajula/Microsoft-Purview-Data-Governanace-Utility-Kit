@@ -9,7 +9,7 @@ def datamap():
         print("""
         1. Collections
         2. Data Sources
-        3. Export Metadata
+        3. Export Metadata By Data Source Type
         4. Go to Purview
         5. Exit
         """)
