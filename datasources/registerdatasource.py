@@ -7,9 +7,9 @@ from typing import Dict, List
 from PurviewScanClient.purviewscanclient import get_purview_scan_client
 from Authenticate.authenticate import authenticate
 from datasources.generatebackupscript import generate_backup_script
-from datasources.datasources import SOURCE_TYPES
-from datasources.datasources import COMMON_PROPERTIES
-from datasources.datasources import PARSED_FIELDS
+from datasources.datasourcesProp import SOURCE_TYPES
+from datasources.datasourcesProp import COMMON_PROPERTIES
+from datasources.datasourcesProp import PARSED_FIELDS
 from datasources.buildpayload import build_payload
 from datasources.parseresourceId import parse_resource_id
 from Collections.resolvecollection import resolve_collection_name
@@ -20,7 +20,7 @@ from datasources.generateregistereddatasourcescsv import write_record_with_recon
 # Use repo working directory to avoid confusion about different user homes
 CSV_FILE = os.path.join(os.getcwd(), "registered-datasources.csv")
 
-def register_datasource():
+def registerdatasource():
     print("Supported source types:", ", ".join(SOURCE_TYPES.keys()))
     source_type = input("Enter data source type: ").strip()
     if source_type not in SOURCE_TYPES:
@@ -65,7 +65,7 @@ def register_datasource():
 
     client = get_purview_scan_client()
     try:
-        response = client.data_sources.create_or_update(props.get("ds_name", ""), body=payload)
+        response = client.data_sources.delete(props.get("ds_name", ""), body=payload)
         print("Data source registered:", response)
     except Exception as e:
         print("Error registering data source:", e)
@@ -92,5 +92,5 @@ def register_datasource():
     generate_backup_script(source_type, props, payload)
 
 if __name__ == "__main__":
-    register_datasource()
+    registerdatasource()
 
