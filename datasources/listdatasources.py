@@ -10,9 +10,9 @@ def listdatasources():
         rows.append([
             d.get("kind"),
             d.get("name"),
-            d.get("properties").get("createdAt")
-            d.get("properties").get("parentCollection")
-            d.get("properties").get("collection").get("referenceName")
+            d.get("properties").get("createdAt"),
+            d.get("properties").get("parentCollection"),
+            d.get("properties").get("collection").get("referenceName"),
             d.get("properties")
         ])
 
