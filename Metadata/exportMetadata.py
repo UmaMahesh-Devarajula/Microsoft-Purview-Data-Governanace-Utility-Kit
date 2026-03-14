@@ -7,7 +7,7 @@ def exportmetadata():
     client = get_purview_catalog_client()
 
     all_guids = []
-    limit = 100
+    limit = 1000
     offset = 0
     ds_type = input("Enter Data Source Type: ")
 
