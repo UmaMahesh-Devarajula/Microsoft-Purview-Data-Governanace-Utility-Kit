@@ -42,7 +42,7 @@ This project shows how to:
   - **Restore DataSources from JSON file**
  
 - **Export Metadata by Source type**
-UmaMahesh-Devarajula/Microsoft-Purview-Data-Governanace-Utility-Kit/Metadata/exportmetadatabysourcetype.PNG
+
      
 ## 🚀 Getting Started
 
