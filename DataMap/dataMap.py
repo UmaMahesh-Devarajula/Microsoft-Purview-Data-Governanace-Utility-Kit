@@ -1,6 +1,7 @@
 import sys
 from Collections.collections import collections
 from datasources.dataSources import dataSources
+from Metada.exportMetadata import exportmetadata
 
 def datamap():    
         
@@ -8,8 +9,9 @@ def datamap():
         print("""
         1. Collections
         2. Data Sources
-        3. Go to Purview
-        4. Exit
+        3. Export Metadata
+        4. Go to Purview
+        5. Exit
         """)
         choice = input("Enter your choice: ")
         if choice == "1":
@@ -17,9 +19,11 @@ def datamap():
         elif choice == "2":
             dataSources()
         elif choice == "3":
+            exportmetadata()
+        elif choice == "4":
                 import purview# Import inside the function
                 purview.purview()
-        elif choice == "4":
+        elif choice == "5":
             print("Exiting... Goodbye!")
             sys.exit(0)
         else:
